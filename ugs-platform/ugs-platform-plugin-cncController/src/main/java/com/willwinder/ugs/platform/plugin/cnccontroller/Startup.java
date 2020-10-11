@@ -17,7 +17,9 @@
     along with UGS.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.willwinder.ugs.platform.plugin.cnccontroller;
+import com.willwinder.ugs.nbp.lib.lookup.CentralLookup;
 import org.openide.modules.OnStart;
+import com.willwinder.ugs.platform.plugin.cnccontroller.CncController;
 
 /**
  * Initializes, starts and adds the JoystickService to the central lookup when UGS starts.
@@ -26,23 +28,12 @@ import org.openide.modules.OnStart;
 public class Startup implements Runnable {
     @Override
     public void run() {
-        System.out.println("STARTUP STARTUP STARTUP");
-        System.out.println("STARTUP STARTUP STARTUP");
-        System.out.println("STARTUP STARTUP STARTUP");
-        System.out.println("STARTUP STARTUP STARTUP");
-        System.out.println("STARTUP STARTUP STARTUP");
-        System.out.println("STARTUP STARTUP STARTUP");
-                System.out.println("STARTUP STARTUP STARTUP");
-        System.out.println("STARTUP STARTUP STARTUP");
-        System.out.println("STARTUP STARTUP STARTUP");
-        System.out.println("STARTUP STARTUP STARTUP");
-        System.out.println("STARTUP STARTUP STARTUP");
-        System.out.println("STARTUP STARTUP STARTUP");
-                System.out.println("STARTUP STARTUP STARTUP");
-        System.out.println("STARTUP STARTUP STARTUP");
-        System.out.println("STARTUP STARTUP STARTUP");
-        System.out.println("STARTUP STARTUP STARTUP");
-        System.out.println("STARTUP STARTUP STARTUP");
-        System.out.println("STARTUP STARTUP STARTUP");
+        CncController cnc = CentralLookup.getDefault().lookup(CncController.class);
+        if (cnc != null) {
+            return;
+        }
+
+        cnc = new CncController();
+        CentralLookup.getDefault().add(cnc);
     }
 }

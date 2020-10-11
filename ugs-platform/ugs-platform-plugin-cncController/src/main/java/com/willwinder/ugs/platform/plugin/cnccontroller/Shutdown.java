@@ -27,17 +27,9 @@ import org.openide.modules.OnStop;
 public class Shutdown implements Runnable {
     @Override
     public void run() {
-        System.out.println("SHUTDOWN!!!");
-System.out.println("SHUTDOWN!!!");
-        System.out.println("SHUTDOWN!!!");
-System.out.println("SHUTDOWN!!!");
-        System.out.println("SHUTDOWN!!!");
-System.out.println("SHUTDOWN!!!");
-        System.out.println("SHUTDOWN!!!");
-System.out.println("SHUTDOWN!!!");
-        System.out.println("SHUTDOWN!!!");
-System.out.println("SHUTDOWN!!!");
-        System.out.println("SHUTDOWN!!!");
-System.out.println("SHUTDOWN!!!");
+        CncController cnc = CentralLookup.getDefault().lookup(CncController.class);
+        if (cnc != null) {
+            cnc.stop();
+        }
     }
 }
