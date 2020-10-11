@@ -108,6 +108,11 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>ugs-platform-plugin-cncController</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>ugs-platform-plugin-cloud-storage</artifactId>
             <version>${project.version}</version>
         </dependency>
