@@ -191,45 +191,139 @@ public class CncController {
     
     private void handleButton(Button b, float value)
     {
+        
+        //log.info("Button: " + b.toString() + "v: " + value);
+        
         if(b.equals(Button._12)) // start
         {
-            System.out.println("Start button");
+            if(value == 1.0)
+                log.info("Button: Start");
         }
         else if(b.equals(Button._10)) // Stop
         {
-            
+            if(value == 1.0)
+                log.info("Button: Stop");
         }
         else if(b.equals(Button._14)) // Pause
         {
-            
+            if(value == 1.0)
+                log.info("Button: Pause");
         }
         else if(b.equals(Button._13)) // Reset
         {
-            
+            if(value == 1.0)
+                log.info("Button: Reset");
         }
         else if(b.equals(Button._8)) // Home
         {
-            
+            if(value == 1.0)
+                log.info("Button: Home");
         }
         else if(b.equals(Button._11)) // jog mode
         {
-            
+            if(value == 1.0)
+                log.info("Button: Jog Mode");
         }
         else if(b.equals(Button._22)) // Vorschub
         {
-            
+            if(value == 1.0)
+                log.info("Button: Vorschub");
         }
         else if(b.equals(Button._21)) // spindel
         {
+            if(value == 1.0)
+                log.info("Button: Spindel");
             
         }
         else if(b.equals(Button._0)) // Achse 0000
         {
-            
+            if(value == 1.0)
+                log.info("Button: Achse 000");
         }
         else if(b.equals(Button._9)) // Achsen 000
         {
-            
+            if(value == 1.0)
+                log.info("Button: Achsen 000");
+        }
+        else if(b.equals(Button._5))
+        {
+            if(value == 1.0)
+            {
+                log.info("Step select: 1");
+            }
+            else if(value == 0.0)
+            {
+                log.info("Step select: 10");
+            }
+            else {
+                log.warning("Button 5 unknown value: " + value);
+            }
+        }
+        else if(b.equals(Button._6))
+        {
+            if(value == 1.0)
+            {
+                log.info("Step select: 0.1");
+            }
+            else if(value != 0.0)
+            {
+                log.warning("Button 6 unknown value: " + value);
+            }
+        }
+        else if(b.equals(Button._3))
+        {
+            if(value == 1.0)
+            {
+                log.info("Step select: 0.01");
+            }
+            else if(value != 0.0)
+            {
+                log.warning("Button 3 unknown value: " + value);
+            }
+        }
+        else if(b.equals(Button._4))
+        {
+            if(value == 1.0)
+            {
+                log.info("Axis select: A");
+            }
+            else if(value != 0.0)
+            {
+                log.warning("Button 4 unknown value: " + value);
+            }
+        }
+        else if(b.equals(Button._1))
+        {
+            if(value == 1.0)
+            {
+                log.info("Axis select: Z");
+            }
+            else if(value != 0.0)
+            {
+                log.warning("Button 1 unknown value: " + value);
+            }
+        }
+        else if(b.equals(Button._2))
+        {
+            if(value == 1.0)
+            {
+                log.info("Axis select: Y");
+            }
+            else if(value != 0.0)
+            {
+                log.warning("Button 2 unknown value: " + value);
+            }
+        }
+        else if(b.equals(Button._7))
+        {
+            if(value == 1.0)
+            {
+                log.info("Axis select: X");
+            }
+            else if(value != 0.0)
+            {
+                log.warning("Button 7 unknown value: " + value);
+            }
         }
         else
         {
