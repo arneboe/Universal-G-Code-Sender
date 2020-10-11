@@ -20,6 +20,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.willwinder.ugs.nbp.lib.services.ActionReference;
 import com.willwinder.ugs.nbp.lib.services.ActionRegistrationService;
+import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,6 +30,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+import javax.swing.Action;
 import net.java.games.input.Component;
 import net.java.games.input.Component.Identifier.Axis;
 import net.java.games.input.Component.Identifier.Button;
@@ -38,6 +40,18 @@ import net.java.games.input.Event;
 import net.java.games.input.EventQueue;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
+
+
+
+enum SelectedAxis
+{
+    X,Y,Z,A,NONE;
+}
+
+enum StepSize
+{
+    SIZE_10,SIZE_1,SIZE_01,SIZE_001;
+}
 
 /**
  * This class encapsulates the cnc controller.
@@ -52,13 +66,18 @@ public class CncController {
     ArrayList<Controller> muhiControllers = new ArrayList<Controller>();
     private ActionRegistrationService actionRegistrationService;
 
+    private SelectedAxis selectedAxis = SelectedAxis.NONE;
     
     private ActionReference homeAction;
     private ActionReference pauseAction;
     private ActionReference startAction;
     private ActionReference resetAction;
     private ActionReference stopAction;
-    
+    private ActionReference jogSizeXY10;
+    private ActionReference jogSizeXY1;
+    private ActionReference jogSizeXY01;
+    private ActionReference jogSizeXY001;
+      
     public CncController(){
         log.info("Frickelcnc Controller loading...");
         Controller[] controllers = ControllerEnvironment
@@ -78,12 +97,21 @@ public class CncController {
             log.warning("Found no cnc controller. Controller plugin disabled");
             return;
         }
-        
+               
         actionRegistrationService = Lookup.getDefault().lookup(ActionRegistrationService.class);    
         runThread = Executors.newSingleThreadExecutor();
         runThread.execute(this::run);
     }
     
+    
+    void execAction(ActionReference ar)
+    {
+        Action action = ar.getAction();
+        if(action.isEnabled())
+        {
+            action.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
+        }
+    }
     
     ActionReference waitForAndGetAction(String id)
     {
@@ -108,6 +136,10 @@ public class CncController {
         startAction = waitForAndGetAction("Actions/Machine/com-willwinder-ugs-nbp-core-actions-StartAction.instance");
         resetAction = waitForAndGetAction("Actions/Machine/com-willwinder-ugs-nbp-core-actions-SoftResetAction.instance");
         stopAction = waitForAndGetAction("Actions/Machine/com-willwinder-ugs-nbp-core-actions-StopAction.instance");
+        jogSizeXY001 = waitForAndGetAction("Actions/Machine/com.willwinder.ugs.nbp.core.services.JogActionService.JogSizeActionxy.001.instance");
+        jogSizeXY01 = waitForAndGetAction("Actions/Machine/com.willwinder.ugs.nbp.core.services.JogActionService.JogSizeActionxy.01.instance");
+        jogSizeXY1 = waitForAndGetAction("Actions/Machine/com.willwinder.ugs.nbp.core.services.JogActionService.JogSizeActionxy.1.instance");
+        jogSizeXY10 = waitForAndGetAction("Actions/Machine/com.willwinder.ugs.nbp.core.services.JogActionService.JogSizeActionxy.10.instance");
 
         //nullen
         // Actions/Machine/com-willwinder-ugs-nbp-core-actions-ResetXCoordinatesToZeroAction.instance
@@ -152,7 +184,7 @@ public class CncController {
 --- Actions/Machine/com.willwinder.ugs.nbp.core.services.JogActionService.JogSizeActionz.01.instance
 --- Actions/Machine/com.willwinder.ugs.nbp.core.services.JogActionService.JogSizeActionz.1.instance
 --- Actions/Machine/com.willwinder.ugs.nbp.core.services.JogActionService.JogSizeActionz.10.instance
-      
+      c
 --- Actions/Overrides/com.willwinder.ugs.nbp.core.services.OverrideAction.feedOvrFinePlus.instance
 --- Actions/Overrides/com.willwinder.ugs.nbp.core.services.OverrideAction.feedOvrCoarsePlus.instance
 --- Actions/Overrides/com.willwinder.ugs.nbp.core.services.OverrideAction.feedOvrFineMinus.instance
@@ -189,6 +221,34 @@ public class CncController {
     }
         
     
+    private void selectStepSize(StepSize size)
+    {
+        if(selectedAxis == SelectedAxis.X || selectedAxis == SelectedAxis.Y)
+        {
+            switch(size)
+            {
+                case SIZE_001:
+                    execAction(jogSizeXY001);
+                    break;
+                case SIZE_01:
+                    execAction(jogSizeXY01);
+                    break;
+                case SIZE_1:
+                    execAction(jogSizeXY1);
+                    break;
+                case SIZE_10:
+                    execAction(jogSizeXY10);
+                    break;
+                default:
+                    log.warning("illegal case");
+            }
+        }
+        else
+        {
+            log.warning("step size selection not implemented for axis other than xy");
+        }
+    }
+    
     private void handleButton(Button b, float value)
     {
         
@@ -217,7 +277,10 @@ public class CncController {
         else if(b.equals(Button._8)) // Home
         {
             if(value == 1.0)
+            {
                 log.info("Button: Home");
+                execAction(homeAction);
+            }
         }
         else if(b.equals(Button._11)) // jog mode
         {
@@ -250,10 +313,12 @@ public class CncController {
             if(value == 1.0)
             {
                 log.info("Step select: 1");
+                selectStepSize(StepSize.SIZE_1);
             }
             else if(value == 0.0)
             {
                 log.info("Step select: 10");
+                selectStepSize(StepSize.SIZE_10);
             }
             else {
                 log.warning("Button 5 unknown value: " + value);
@@ -264,6 +329,7 @@ public class CncController {
             if(value == 1.0)
             {
                 log.info("Step select: 0.1");
+                selectStepSize(StepSize.SIZE_01);
             }
             else if(value != 0.0)
             {
@@ -275,6 +341,7 @@ public class CncController {
             if(value == 1.0)
             {
                 log.info("Step select: 0.01");
+                selectStepSize(StepSize.SIZE_001);
             }
             else if(value != 0.0)
             {
@@ -286,6 +353,7 @@ public class CncController {
             if(value == 1.0)
             {
                 log.info("Axis select: A");
+                selectedAxis = SelectedAxis.A;
             }
             else if(value != 0.0)
             {
@@ -297,6 +365,7 @@ public class CncController {
             if(value == 1.0)
             {
                 log.info("Axis select: Z");
+                selectedAxis = SelectedAxis.Z;
             }
             else if(value != 0.0)
             {
@@ -308,6 +377,7 @@ public class CncController {
             if(value == 1.0)
             {
                 log.info("Axis select: Y");
+                selectedAxis = SelectedAxis.Y;
             }
             else if(value != 0.0)
             {
@@ -319,6 +389,7 @@ public class CncController {
             if(value == 1.0)
             {
                 log.info("Axis select: X");
+                selectedAxis = SelectedAxis.X;
             }
             else if(value != 0.0)
             {
@@ -329,7 +400,6 @@ public class CncController {
         {
             log.warning("Unknown button: " + b.toString());
         }
-
     }
     
     private void handleAxis(Axis a, float value)
@@ -369,6 +439,13 @@ public class CncController {
     private void run() {
         isRunning = true;
         
+        //TODO remove this sleep. fix the race instead
+        //TODO figure out how to wait until application has been initialized
+        try {
+            Thread.sleep(8000);
+        } catch (InterruptedException ex) {
+            Exceptions.printStackTrace(ex);
+        }
         loadActions();      
                 
         while (isRunning) {
