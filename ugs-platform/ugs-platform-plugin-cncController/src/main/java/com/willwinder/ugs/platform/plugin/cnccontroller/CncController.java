@@ -77,6 +77,15 @@ public class CncController {
     private ActionReference jogSizeXY1;
     private ActionReference jogSizeXY01;
     private ActionReference jogSizeXY001;
+    private ActionReference jogStepXPlus;
+    private ActionReference jogStepYPlus;
+    private ActionReference jogStepZPlus;
+    private ActionReference jogStepXMinus;
+    private ActionReference jogStepYMinus;
+    private ActionReference jogStepZMinus;
+    private ActionReference feedOverrideFinePlus;
+    private ActionReference feedOverrideFineMinus;
+    private ActionReference feedOverrideReset;
       
     public CncController(){
         log.info("Frickelcnc Controller loading...");
@@ -113,6 +122,18 @@ public class CncController {
         }
     }
     
+    void execAction(ActionReference ar, int times)
+    {
+        Action action = ar.getAction();
+        if(action.isEnabled())
+        {
+            for(int i = 0; i < times; i++)
+            {
+                action.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
+            }
+        }
+    }
+    
     ActionReference waitForAndGetAction(String id)
     {
         log.info("Waiting for Action: " + id);
@@ -140,8 +161,16 @@ public class CncController {
         jogSizeXY01 = waitForAndGetAction("Actions/Machine/com.willwinder.ugs.nbp.core.services.JogActionService.JogSizeActionxy.01.instance");
         jogSizeXY1 = waitForAndGetAction("Actions/Machine/com.willwinder.ugs.nbp.core.services.JogActionService.JogSizeActionxy.1.instance");
         jogSizeXY10 = waitForAndGetAction("Actions/Machine/com.willwinder.ugs.nbp.core.services.JogActionService.JogSizeActionxy.10.instance");
-
-        //nullen
+        jogStepXPlus = waitForAndGetAction("Actions/Machine/com.willwinder.ugs.nbp.core.services.JogActionService.xPlus.instance");
+        jogStepYPlus = waitForAndGetAction("Actions/Machine/com.willwinder.ugs.nbp.core.services.JogActionService.yPlus.instance");
+        jogStepZPlus = waitForAndGetAction("Actions/Machine/com.willwinder.ugs.nbp.core.services.JogActionService.zPlus.instance");
+        jogStepXMinus = waitForAndGetAction("Actions/Machine/com.willwinder.ugs.nbp.core.services.JogActionService.xMinus.instance");
+        jogStepYMinus = waitForAndGetAction("Actions/Machine/com.willwinder.ugs.nbp.core.services.JogActionService.yMinus.instance");
+        jogStepZMinus = waitForAndGetAction("Actions/Machine/com.willwinder.ugs.nbp.core.services.JogActionService.zMinus.instance");
+        feedOverrideFinePlus = waitForAndGetAction("Actions/Overrides/com.willwinder.ugs.nbp.core.services.OverrideAction.feedOvrFinePlus.instance");
+        feedOverrideFineMinus = waitForAndGetAction("Actions/Overrides/com.willwinder.ugs.nbp.core.services.OverrideAction.feedOvrFineMinus.instance");
+        feedOverrideReset = waitForAndGetAction("Actions/Overrides/com.willwinder.ugs.nbp.core.services.OverrideAction.feedOvrReset.instance");
+//nullen
         // Actions/Machine/com-willwinder-ugs-nbp-core-actions-ResetXCoordinatesToZeroAction.instance
         // Actions/Machine/com-willwinder-ugs-nbp-core-actions-ResetYCoordinatesToZeroAction.instance
         // Actions/Machine/com-willwinder-ugs-nbp-core-actions-ResetZCoordinatesToZeroAction.instance
@@ -220,32 +249,24 @@ public class CncController {
         }
     }
         
-    
     private void selectStepSize(StepSize size)
     {
-        if(selectedAxis == SelectedAxis.X || selectedAxis == SelectedAxis.Y)
+        switch(size)
         {
-            switch(size)
-            {
-                case SIZE_001:
-                    execAction(jogSizeXY001);
-                    break;
-                case SIZE_01:
-                    execAction(jogSizeXY01);
-                    break;
-                case SIZE_1:
-                    execAction(jogSizeXY1);
-                    break;
-                case SIZE_10:
-                    execAction(jogSizeXY10);
-                    break;
-                default:
-                    log.warning("illegal case");
-            }
-        }
-        else
-        {
-            log.warning("step size selection not implemented for axis other than xy");
+            case SIZE_001:
+                execAction(jogSizeXY001);
+                break;
+            case SIZE_01:
+                execAction(jogSizeXY01);
+                break;
+            case SIZE_1:
+                execAction(jogSizeXY1);
+                break;
+            case SIZE_10:
+                execAction(jogSizeXY10);
+                break;
+            default:
+                log.warning("illegal case");
         }
     }
     
@@ -290,7 +311,10 @@ public class CncController {
         else if(b.equals(Button._22)) // Vorschub
         {
             if(value == 1.0)
-                log.info("Button: Vorschub");
+            {
+                execAction(feedOverrideReset);
+                log.info("Button: Vorschub reset");
+            }
         }
         else if(b.equals(Button._21)) // spindel
         {
@@ -404,13 +428,54 @@ public class CncController {
     
     private void handleAxis(Axis a, float value)
     {
-        System.out.println("Axis " + a.toString() + " v: " + value);
+        if(value < 0.5 && value > -0.5)
+        {
+            //at startup the controller sends: 
+            //  Axis slider v: -0.007827878
+            //  Axis z v: -0.007827878
+            //  Axis y v: -0.007827878
+            //  Axis x v: -0.007827878
+            //this needs to be ignored
+            return;
+        }
+
+        if(a.equals(Axis.X)) //the big wheel
+        {
+            if(selectedAxis == SelectedAxis.X)
+            {
+                if(value > 0)
+                    execAction(jogStepXPlus, (int)(value + 0.1)); //+0.1 to avoid wrong rounding
+                else
+                    execAction(jogStepXMinus, (int)(value * -1 + 0.1)); //+0.1 to avoid wrong rounding
+            }
+            else if(selectedAxis == SelectedAxis.Y)
+            {
+                if(value > 0)
+                    execAction(jogStepYPlus, (int)(value + 0.1)); //+0.1 to avoid wrong rounding
+                else
+                    execAction(jogStepYMinus, (int)(value * -1 + 0.1)); //+0.1 to avoid wrong rounding
+            }
+            else if(selectedAxis == SelectedAxis.Z)
+            {
+                if(value > 0)
+                    execAction(jogStepZPlus, (int)(value + 0.1)); //+0.1 to avoid wrong rounding
+                else
+                    execAction(jogStepZMinus, (int)(value * -1 + 0.1)); //+0.1 to avoid wrong rounding
+            }
+        }
+        else if(a.equals(Axis.Y)) //vorschub
+        {
+            if(value > 0)
+                execAction(feedOverrideFinePlus, (int)(value + 0.1)); //+0.1 to avoid wrong rounding
+            else
+                execAction(feedOverrideFineMinus, (int)(value * -1 + 0.1)); //+0.1 to avoid wrong rounding
+        }
+        //Z = spindel speed
+        
+
         //TODO value can be any float (number of ticks since last event)
         //TODO beim boot up kommen werte:
-        //  Axis slider v: -0.007827878
-        //  Axis z v: -0.007827878
-        //  Axis y v: -0.007827878
-        //  Axis x v: -0.007827878
+
     }
     
     private void handleEvent(Event e)
