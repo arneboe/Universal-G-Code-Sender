@@ -86,6 +86,13 @@ public class CncController {
     private ActionReference feedOverrideFinePlus;
     private ActionReference feedOverrideFineMinus;
     private ActionReference feedOverrideReset;
+    private ActionReference zeroXAxis;
+    private ActionReference zeroYAxis;
+    private ActionReference zeroZAxis;
+    private ActionReference jogSizeZ001;
+    private ActionReference jogSizeZ01;
+    private ActionReference jogSizeZ1;
+            
       
     public CncController(){
         log.info("Frickelcnc Controller loading...");
@@ -170,6 +177,12 @@ public class CncController {
         feedOverrideFinePlus = waitForAndGetAction("Actions/Overrides/com.willwinder.ugs.nbp.core.services.OverrideAction.feedOvrFinePlus.instance");
         feedOverrideFineMinus = waitForAndGetAction("Actions/Overrides/com.willwinder.ugs.nbp.core.services.OverrideAction.feedOvrFineMinus.instance");
         feedOverrideReset = waitForAndGetAction("Actions/Overrides/com.willwinder.ugs.nbp.core.services.OverrideAction.feedOvrReset.instance");
+        zeroXAxis = waitForAndGetAction("Actions/Machine/com-willwinder-ugs-nbp-core-actions-ResetXCoordinatesToZeroAction.instance");
+        zeroYAxis = waitForAndGetAction("Actions/Machine/com-willwinder-ugs-nbp-core-actions-ResetYCoordinatesToZeroAction.instance");
+        zeroZAxis = waitForAndGetAction("Actions/Machine/com-willwinder-ugs-nbp-core-actions-ResetZCoordinatesToZeroAction.instance");
+        jogSizeZ001 = waitForAndGetAction("Actions/Machine/com.willwinder.ugs.nbp.core.services.JogActionService.JogSizeActionz.001.instance");
+        jogSizeZ01 = waitForAndGetAction("Actions/Machine/com.willwinder.ugs.nbp.core.services.JogActionService.JogSizeActionz.01.instance");
+        jogSizeZ1 = waitForAndGetAction("Actions/Machine/com.willwinder.ugs.nbp.core.services.JogActionService.JogSizeActionz.1.instance");
 //nullen
         // Actions/Machine/com-willwinder-ugs-nbp-core-actions-ResetXCoordinatesToZeroAction.instance
         // Actions/Machine/com-willwinder-ugs-nbp-core-actions-ResetYCoordinatesToZeroAction.instance
@@ -255,18 +268,38 @@ public class CncController {
         {
             case SIZE_001:
                 execAction(jogSizeXY001);
+                execAction(jogSizeZ001);
                 break;
             case SIZE_01:
                 execAction(jogSizeXY01);
+                execAction(jogSizeZ01);
                 break;
             case SIZE_1:
                 execAction(jogSizeXY1);
+                execAction(jogSizeZ1);
                 break;
             case SIZE_10:
                 execAction(jogSizeXY10);
+                execAction(jogSizeZ1);
                 break;
             default:
                 log.warning("illegal case");
+        }
+    }
+    
+    private void zeroCurrentAxis()
+    {
+        if(selectedAxis == SelectedAxis.X)
+        {
+            execAction(zeroXAxis);
+        }
+        else if(selectedAxis  == SelectedAxis.Y)
+        {
+            execAction(zeroYAxis);
+        }
+        else if(selectedAxis == SelectedAxis.Z)
+        {
+            execAction(zeroZAxis);
         }
     }
     
@@ -278,17 +311,26 @@ public class CncController {
         if(b.equals(Button._12)) // start
         {
             if(value == 1.0)
+            {
                 log.info("Button: Start");
+                execAction(startAction);
+            }
         }
         else if(b.equals(Button._10)) // Stop
         {
             if(value == 1.0)
+            {
                 log.info("Button: Stop");
+                execAction(stopAction);
+            }
         }
         else if(b.equals(Button._14)) // Pause
         {
             if(value == 1.0)
+            {
                 log.info("Button: Pause");
+                execAction(pauseAction);
+            }
         }
         else if(b.equals(Button._13)) // Reset
         {
@@ -325,12 +367,18 @@ public class CncController {
         else if(b.equals(Button._0)) // Achse 0000
         {
             if(value == 1.0)
+            {
+                zeroCurrentAxis();
                 log.info("Button: Achse 000");
+            }
         }
         else if(b.equals(Button._9)) // Achsen 000
         {
             if(value == 1.0)
+            {
+                
                 log.info("Button: Achsen 000");
+            }
         }
         else if(b.equals(Button._5))
         {
